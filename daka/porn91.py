@@ -34,7 +34,23 @@ class Porn91:
         # 判断是否有cookie
         cookies = self.http.session.cookies
         # self.fetch_cookies()
+        # self.fetch_ip()
 
+    # 访问https://2025.ip138.com/，获得自己真是ip
+    def fetch_ip(self):
+        url = "https://2025.ip138.com/"
+        response = self.http.make_request(
+            method="GET", endpoint=url
+
+        )
+        # print(response.text)
+        # 解析 HTML 内容
+        soup = BeautifulSoup(response, 'html.parser')
+        # 获取所有的视频列表 <div class="well well-sm videos-text-align">
+        div = soup.find("div", class_="view")
+        # 提取a标签中的文本内容
+        ip = div.find('a').get_text(strip=True)
+        return ip
     # 定义一个函数来获取cookie
     def fetch_cookies(self):
         url = self.baseUrl + "/ehrportal/loginFOpen.asp"
@@ -73,9 +89,18 @@ class Porn91:
         endpoint = "/v.php?category=rf&viewtype=basic&page=" + str(page)
         # print(url)
         # 发送GET请求
+        cookies = 'CLIPSHARE=ec3e6783e7f1eba2340ef90c8d0cc201; ga=97633SGph1S5HeZcTfmczJNgccMj%2B5TTBE20AwAhsYr0pb5CefIzAg; __utma=50351329.1112671635.1758095559.1758095559.1758095559.1; __utmc=50351329; __utmz=50351329.1758095559.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); _ga=GA1.1.1406325012.1758095638; mode=m; evercookie_etag=undefined; evercookie_cache=undefined; cf_clearance=fgFB_m2r88OM.5mwReHTbDT44agLiAJYrqVZ7vcj6dg-1758110797-1.2.1.1-VClBM_robWMO1LcC165GzGoOcdOn4Yq0Clt30cjm0dJY7P1PX7yt6jiztW.xWWfIwTLryxcBRvQ1bhhVrZCOMBcgaxz9HPtuQJssf8sOl1oTXphyhQCbN3SIznbU6vYjWTdcb7llZN7RFJBZWG7mCXjK2FPk3O0gcPpEvav76f4hILuVuIQ5Ldji3tzHhVFZcmVezmpbsiZlL8IaFjUO7PiON8aQTpyUIltyt9U5h3o; _ga_K5S02BRGF0=GS2.1.s1758110798$o2$g0$t1758110798$j60$l0$h0'
+        
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",    
+            "Accept-Language": "zh-CN,zh;q=0.9",
+            "cookie": cookies,
+        }
         # response = requests.get(url, cookies=self.global_cookies)
         response = self.http.make_request(
-            method="GET", endpoint=endpoint
+            method="GET", endpoint=endpoint, headers=headers 
+
         )
         # print(response.text)
         # 把打卡记录转化为数组

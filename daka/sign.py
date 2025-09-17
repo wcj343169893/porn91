@@ -40,5 +40,7 @@ class Daka:
         now_timestamp = self.timer.get_now_timestamp()
 
         porn = Porn91(self.username, self.password)
+        ip = porn.fetch_ip()
+        _LOG.info("当前IP：%s", ip)
         # 获取打卡记录
         last_card_date = porn.fetch_video_list()
