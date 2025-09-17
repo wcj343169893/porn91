@@ -1,0 +1,52 @@
+import logging
+import sys
+import argparse
+
+from daka.sign import Daka
+
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s [%(name)s] [%(levelname)s] %(message)s"
+)
+_LOG = logging.getLogger(__name__)
+
+
+def main():
+    parser = argparse.ArgumentParser(description="打卡系统自动打卡")
+    parser.add_argument("username", type=str, nargs="?", help="用户名")
+    parser.add_argument("password", type=str, nargs="?", help="密码")
+    parser.add_argument("appid", type=str, nargs="?", help="roleApi的appid")
+    parser.add_argument("appsecret", type=str, nargs="?", help="roleApi的appsecret")
+    # email
+    parser.add_argument("email", type=str, nargs="?", help="163邮箱账号")
+    parser.add_argument("email_password", type=str, nargs="?", help="163邮箱专用密码")
+    parser.add_argument("to_email", type=str, nargs="?", help="接收打卡结果的邮箱")
+
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("-v", action="store_true", dest="verbose", help="详细模式，显示更多运行信息")
+    group.add_argument("-q", action="store_true", dest="quiet", help="安静模式，不显示运行信息")
+    args = parser.parse_args()
+
+    if args.verbose:
+        logging.getLogger(__name__).setLevel(logging.DEBUG)
+        logging.getLogger("urllib3.connectionpool").setLevel(logging.DEBUG)
+        logging.debug("详细模式..")
+
+    if args.quiet:
+        logging.getLogger().setLevel(logging.CRITICAL)
+    # username, password, appid, appsecret 必填
+    if not args.username or not args.password or not args.appid or not args.appsecret:
+        parser.print_help()
+        sys.exit(1)
+
+    try:
+        app = Daka(args.username, args.password, args.appid, args.appsecret, args.email, args.email_password,
+                   args.to_email)
+        app.auto_sign()
+    except KeyboardInterrupt:
+        _LOG.info("退出..")
+        sys.exit()
+
+
+if __name__ == "daka":
+    main()
+    sys.exit()
