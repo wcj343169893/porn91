@@ -33,7 +33,7 @@ class Porn91:
         self.http = Http(self.baseUrl)
         # 判断是否有cookie
         cookies = self.http.session.cookies
-        self.fetch_cookies()
+        # self.fetch_cookies()
 
     # 定义一个函数来获取cookie
     def fetch_cookies(self):

@@ -1,0 +1,18 @@
+{
+    "configurations": [
+        {
+            "type": "python",
+            "request": "launch",
+            "name": "Launch Daka App",
+            "module": "daka",
+            "console": "integratedTerminal",
+            "args": [
+                "111",
+                "222",
+                "333",
+                "444",
+                "555"
+            ]
+        }
+    ]
+}
