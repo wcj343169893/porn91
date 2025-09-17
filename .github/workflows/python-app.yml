@@ -28,4 +28,4 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Run
       run: |
-        python -m daka -v ${{secrets.USERNAME}} ${{secrets.PASSWORD}} ${{secrets.APPID}} ${{secrets.APPSECRET}} ${{secrets.FROM_EMAIL}} ${{secrets.EMAIL_PASSWORD}} ${{secrets.TO_EMAIL}}
+        python -m daka -v ${{secrets.USERNAME}} ${{secrets.PASSWORD}} ${{secrets.FROM_EMAIL}} ${{secrets.EMAIL_PASSWORD}} ${{secrets.TO_EMAIL}}

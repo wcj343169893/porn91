@@ -14,8 +14,6 @@ def main():
     parser = argparse.ArgumentParser(description="打卡系统自动打卡")
     parser.add_argument("username", type=str, nargs="?", help="用户名")
     parser.add_argument("password", type=str, nargs="?", help="密码")
-    parser.add_argument("appid", type=str, nargs="?", help="roleApi的appid")
-    parser.add_argument("appsecret", type=str, nargs="?", help="roleApi的appsecret")
     # email
     parser.add_argument("email", type=str, nargs="?", help="163邮箱账号")
     parser.add_argument("email_password", type=str, nargs="?", help="163邮箱专用密码")
@@ -33,13 +31,13 @@ def main():
 
     if args.quiet:
         logging.getLogger().setLevel(logging.CRITICAL)
-    # username, password, appid, appsecret 必填
+    # username, password 必填
     if not args.username or not args.password or not args.appid or not args.appsecret:
         parser.print_help()
         sys.exit(1)
 
     try:
-        app = Daka(args.username, args.password, args.appid, args.appsecret, args.email, args.email_password,
+        app = Daka(args.username, args.password, args.email, args.email_password,
                    args.to_email)
         app.auto_sign()
     except KeyboardInterrupt:

@@ -7,15 +7,38 @@
 步骤：
 
 1. Fork 本项目
-2. 申请[rollApi](https://mp.weixin.qq.com/s/UvKr0SG73_Py63ICUnLBPw)的账号
 3. 打开项目设置，在`Secrets and Variables`，点 New repository secret，添加变量名`username`，`password`，并填入打卡的账号密码，
-   `appid`，`appsecret`填写roleApi的应用信息。
 4. 保存后就可去Action里面触发任务。
 
 ## 如何安装
+创建虚拟目录
+```shell
+python -m venv venv
+```
+安装依赖
+
+```shell
+pip install -r requirements.txt
+```
+
 
 ``` shell
 pip install --user daka
+```
+``` shell
+pip install  daka
+```
+```shell
+pip install daka --trusted-host pypi.org --trusted-host files.pythonhosted.org --trusted-host pypi.python.org
+```
+查看版本
+```shell
+pip show daka
+```
+
+
+```
+pip install --upgrade -r requirements.txt
 ```
 
 ## 使用说明
