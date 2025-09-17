@@ -32,7 +32,7 @@ def main():
     if args.quiet:
         logging.getLogger().setLevel(logging.CRITICAL)
     # username, password 必填
-    if not args.username or not args.password or not args.appid or not args.appsecret:
+    if not args.username or not args.password:
         parser.print_help()
         sys.exit(1)
 
