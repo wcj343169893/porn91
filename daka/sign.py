@@ -16,16 +16,18 @@ class Daka:
     email = ''
     email_password = ''
     to_email = ''
+    max_page = 5
     timer = None
 
-    def __init__(self, username, password, email, email_password, to_email):
+    def __init__(self, username, password, email, email_password, to_email, max_page):
         self.username = username
         self.password = password
         self.email = email
         self.email_password = email_password
         self.to_email = to_email
+        self.max_page = max_page
         self.timer = Utc8Timer()
-        self.porn91 = Porn91(username, password)
+        self.porn91 = Porn91(username, password, max_page)
 
     def has_already_clocked(self, last_card_date, timestamp, begin, end):
         if not last_card_date:

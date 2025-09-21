@@ -28,6 +28,7 @@ _LOG = logging.getLogger(__name__)
 class Porn91:
     username = ''
     password = ''
+    max_page = 50
     baseUrl = "https://www.91porn.com"
     cdnUrl = "https://vthumb.killcovid2021.com"
     uploadUrl = "https://fc-mp-e1a4ddb5-a7a7-4152-8292-d63e2cc3f4e4.next.bspapp.com/http/uploads"
@@ -36,9 +37,10 @@ class Porn91:
     global_cookies = RequestsCookieJar()
     timer = None
 
-    def __init__(self, username, password):
+    def __init__(self, username, password, max_page = 50):
         self.username = username
         self.password = password
+        self.max_page = max_page
         self.timer = Utc8Timer()
         # self.load_cookie()
         self.http = Http(self.baseUrl)
@@ -154,9 +156,15 @@ class Porn91:
         ip = await self.fetch_ip()  # Await fetch_ip
         _LOG.info("当前IP：%s", ip)
         await self.fetch_videos(1)
+        # 所有都执行完毕
+        await self.http.close_playwright()
+
 
         
     async def fetch_videos(self, page=1):
+        if page > self.max_page:
+            _LOG.info("达到最大页码，停止翻页")
+            return
         video_list = await self.fetch_video_list(page)  # Await fetch_video_list
         _LOG.info("找到 %d 个视频", len(video_list))
         if video_list:
@@ -252,7 +260,13 @@ class Http:
             await self.playwright_context.clear_permissions()
             self.playwright_page = await self.playwright_context.new_page()
         return self.playwright_page
-        
+    
+    async def close_playwright(self):
+        if self.playwright_browser:
+            await self.playwright_browser.close()
+        if self.playwright:
+            await self.playwright.stop()   
+
     async def download_file_playwright(self, url, file_path, timeout=30):
         # 判断目录是否存在，并且构造绝对地址
         # 当前目录+/upload/video/12345/thumbnail.jpg
