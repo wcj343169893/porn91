@@ -43,7 +43,7 @@ class Porn91:
         "longer": "20分钟",
         "tf": "本月收藏",
         "hd": "高清",
-        "mf": "收藏最多"
+        "mf": "收藏最多",
     }
     global_cookies = RequestsCookieJar()
     timer = None
@@ -120,7 +120,7 @@ class Porn91:
                 "video_thumb_mp4": video_thumb_mp4,
                 "video_mp4": "",  # Placeholder for the actual video URL
                 "author": author,
-                "hot": hot
+                "hot_count": hot
             })
         # 打印打卡记录数组
         # _LOG.info(video_records)
