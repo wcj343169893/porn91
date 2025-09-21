@@ -34,6 +34,17 @@ class Porn91:
     uploadUrl = "https://fc-mp-e1a4ddb5-a7a7-4152-8292-d63e2cc3f4e4.next.bspapp.com/http/uploads"
     cookieFileName = "cookie.txt"
     lastPageIds = []
+    categories = {
+        "rf": "精华",
+        "ori": "原创",
+        "hot": "当前最热",
+        "top": "本月最热",
+        "long": "10分钟",
+        "longer": "20分钟",
+        "tf": "本月收藏",
+        "hd": "高清",
+        "mf": "收藏最多"
+    }
     global_cookies = RequestsCookieJar()
     timer = None
 
@@ -61,21 +72,10 @@ class Porn91:
         ip = div.find('a').get_text(strip=True)
         return ip
     
-    def fetch_video_list2(self, page=1):
-        # 模拟真实浏览器的请求头
-        options = webdriver.ChromeOptions()
-        options.add_argument("--headless")
-        driver = webdriver.Chrome(options=options)
-
-        try:
-            driver.get("https://www.google.com")
-            print(driver.title)
-        finally:
-            driver.quit()
 
     # 获取打卡记录
-    async def fetch_video_list(self, page=1):
-        endpoint = "/v.php?category=rf&viewtype=basic&page=" + str(page)
+    async def fetch_video_list(self,type="rf", page=1):
+        endpoint = "/v.php?category="+type+"&viewtype=basic&page=" + str(page)
         response =await self.http.make_request(
             method="GET", endpoint=endpoint
         )
@@ -114,6 +114,7 @@ class Porn91:
                 "id": id,
                 # base64 编码
                 "title": base64.b64encode(title.encode()).decode(),
+                "type": type, # 分类
                 "url": urllib.parse.urljoin(self.baseUrl, href),
                 "thumbnail": urllib.parse.urljoin(self.baseUrl, thumbnail),
                 "video_thumb_mp4": video_thumb_mp4,
@@ -167,17 +168,20 @@ class Porn91:
         _LOG.info("今天是：%s", datetime.now().strftime("%Y-%m-%d"))
         ip = await self.fetch_ip()  # Await fetch_ip
         _LOG.info("当前IP：%s", ip)
-        await self.fetch_videos(1)
+        # 循环分类
+        for type, category in self.categories.items():
+            _LOG.info("开始处理分类：%s (%s)", category, type)
+            await self.fetch_videos(type,1)
         # 所有都执行完毕
         await self.http.close_playwright()
 
 
         
-    async def fetch_videos(self, page=1):
+    async def fetch_videos(self,type, page=1):
         if page > self.max_page:
             _LOG.info("达到最大页码，停止翻页")
             return
-        video_list = await self.fetch_video_list(page)  # Await fetch_video_list
+        video_list = await self.fetch_video_list(type,page)  # Await fetch_video_list
         _LOG.info("找到 %d 个视频", len(video_list))
         if video_list:
             headers = {}
@@ -227,7 +231,7 @@ class Porn91:
         # 翻页
         self.lastPageIds = [video['id'] for video in video_list]
         _LOG.info("处理下一页：%d", page+1)
-        await self.fetch_videos(page+1)
+        await self.fetch_videos(type,page+1)
 
 class Http:
     def __init__(self, base_url=None):
