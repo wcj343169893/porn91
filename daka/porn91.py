@@ -32,6 +32,7 @@ class Porn91:
     cdnUrl = "https://vthumb.killcovid2021.com"
     uploadUrl = "https://fc-mp-e1a4ddb5-a7a7-4152-8292-d63e2cc3f4e4.next.bspapp.com/http/uploads"
     cookieFileName = "cookie.txt"
+    lastPageIds = []
     global_cookies = RequestsCookieJar()
     timer = None
 
@@ -166,22 +167,22 @@ class Porn91:
                 "videos": video_list
             }
             # 先检查哪些没有保存
-            response = requests.post(self.uploadUrl, json=payload, headers=headers)
-            if response.status_code == 200:
-                result = response.json()
-                # 需要上传的id ：result['data']=[111,222,333]
-                _LOG.info("检查视频列表成功")
-                _LOG.info(result)
-                if 'data' in result and isinstance(result['data'], list):
-                    ids_to_upload = result['data']
-                    _LOG.info("需要上传的视频ID列表：%s", ids_to_upload)
-                    # 过滤出需要上传的视频
-                    video_list = [video for video in video_list if video['id'] in ids_to_upload]
-                    _LOG.info("需要上传的视频数量：%d", len(video_list))
-                else:
-                    _LOG.warning("返回数据格式不正确，无法检查已保存视频")
-            for video in video_list:
-                await self.fetch_video_page(video)
+            # response = requests.post(self.uploadUrl, json=payload, headers=headers)
+            # if response.status_code == 200:
+            #     result = response.json()
+            #     # 需要上传的id ：result['data']=[111,222,333]
+            #     _LOG.info("检查视频列表成功")
+            #     _LOG.info(result)
+            #     if 'data' in result and isinstance(result['data'], list):
+            #         ids_to_upload = result['data']
+            #         _LOG.info("需要上传的视频ID列表：%s", ids_to_upload)
+            #         # 过滤出需要上传的视频
+            #         video_list = [video for video in video_list if video['id'] in ids_to_upload]
+            #         _LOG.info("需要上传的视频数量：%d", len(video_list))
+            #     else:
+            #         _LOG.warning("返回数据格式不正确，无法检查已保存视频")
+            # for video in video_list:
+            #     await self.fetch_video_page(video)
 
             # 发送列表到uploadUrl
             payload['check'] = 0
@@ -196,7 +197,15 @@ class Porn91:
                     _LOG.error("上传视频列表失败，状态码：%d", response.status_code)
         else:
             _LOG.info("没有找到视频列表")
+
+        # 如果本页的id和上页的id超过一半一样，说明已经到底了
+        if self.lastPageIds:
+            same_count = len(set(self.lastPageIds) & set([video['id'] for video in video_list]))
+            if same_count > len(video_list) / 2:
+                _LOG.info("视频已经到底了，停止翻页")
+                return
         # 翻页
+        self.lastPageIds = [video['id'] for video in video_list]
         _LOG.info("处理下一页：%d", page+1)
         await self.fetch_videos(page+1)
 
