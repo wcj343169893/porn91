@@ -152,7 +152,7 @@ class Porn91:
         _LOG.info("今天是：%s", datetime.now().strftime("%Y-%m-%d"))
         ip = await self.fetch_ip()  # Await fetch_ip
         _LOG.info("当前IP：%s", ip)
-        self.fetch_videos(1)
+        await self.fetch_videos(1)
 
         
     async def fetch_videos(self, page=1):
@@ -198,7 +198,7 @@ class Porn91:
             _LOG.info("没有找到视频列表")
         # 翻页
         _LOG.info("处理下一页：%d", page+1)
-        self.fetch_videos(page+1)
+        await self.fetch_videos(page+1)
 
 class Http:
     def __init__(self, base_url=None):
