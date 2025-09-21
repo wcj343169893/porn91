@@ -99,6 +99,16 @@ class Porn91:
             id = row.find('div', class_='thumb-overlay')['id'].split('_')[-1]
             video_thumb_mp4 = self.cdnUrl + "/thumb/" + id + ".mp4"
             title = row.find('span', class_='video-title').get_text(strip=True)
+            # 提取作者
+            author = ""
+            author_span = row.find('span', class_='info', string='作者:')
+            if author_span:
+                author = author_span.next_sibling.strip()
+            # 提取热度
+            hot = 0
+            hot_span = row.find('span', class_='info', string='热度:')
+            if hot_span:
+                hot = int(hot_span.next_sibling.strip().replace('\xa0','').replace(',',''))
 
             video_records.append({
                 "id": id,
@@ -108,6 +118,8 @@ class Porn91:
                 "thumbnail": urllib.parse.urljoin(self.baseUrl, thumbnail),
                 "video_thumb_mp4": video_thumb_mp4,
                 "video_mp4": "",  # Placeholder for the actual video URL
+                "author": author,
+                "hot": hot
             })
         # 打印打卡记录数组
         # _LOG.info(video_records)
