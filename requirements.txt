@@ -6,3 +6,5 @@ pytz==2024.2
 requests==2.32.3
 soupsieve==2.6
 urllib3==2.2.3
+selenium==4.11.2
+playwright==1.55.0

@@ -6,9 +6,6 @@ on:
     branches: [ "main" ]
   schedule:
     - cron: '40 0 * * *'  # UTC +8，这里设置的早上9点10分运行
-    - cron: '48 0 * * *'  # UTC +8，这里设置的晚上9点18分运行
-    - cron: '56 0 * * *'  # UTC +8，
-    - cron: '5 10 * * *' # UTC +8，
     - cron: '55 10 * * *' # UTC +8，
 jobs:
   Daka:
@@ -17,14 +14,30 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+
     - name: Set up Python 3.12
       uses: actions/setup-python@v3
       with:
         python-version: "3.12"
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Install Playwright dependencies
+      run: |
+        sudo npx playwright install-deps
+
+    - name: Set up Chrome and Chromedriver
+      uses: browser-actions/setup-chrome@v1
+      with:
+        chrome-version: 'latest'
+
+    - name: Install Playwright browsers
+      run: |
+        python -m playwright install
+
     - name: Run
       run: |
         python -m daka -v ${{secrets.USERNAME}} ${{secrets.PASSWORD}} ${{secrets.FROM_EMAIL}} ${{secrets.EMAIL_PASSWORD}} ${{secrets.TO_EMAIL}}

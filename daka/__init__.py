@@ -1,6 +1,7 @@
 import logging
 import sys
 import argparse
+import asyncio
 
 from daka.sign import Daka
 
@@ -10,7 +11,7 @@ logging.basicConfig(
 _LOG = logging.getLogger(__name__)
 
 
-def main():
+async def main():
     parser = argparse.ArgumentParser(description="打卡系统自动打卡")
     parser.add_argument("username", type=str, nargs="?", help="用户名")
     parser.add_argument("password", type=str, nargs="?", help="密码")
@@ -37,14 +38,18 @@ def main():
         sys.exit(1)
 
     try:
+        _LOG.debug("Initializing Daka with username: %s", args.username)
         app = Daka(args.username, args.password, args.email, args.email_password,
                    args.to_email)
-        app.auto_sign()
+        _LOG.debug("Daka initialized successfully.")
+        await app.auto_sign()
     except KeyboardInterrupt:
         _LOG.info("退出..")
         sys.exit()
+    except Exception as e:
+        _LOG.error("An error occurred: %s", e)
+        raise
 
 
-if __name__ == "daka":
-    main()
-    sys.exit()
+if __name__ == "__main__":
+    asyncio.run(main())

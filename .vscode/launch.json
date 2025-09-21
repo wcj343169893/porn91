@@ -1,18 +1,42 @@
 {
-    "configurations": [
-        {
-            "type": "python",
-            "request": "launch",
-            "name": "Launch Daka App",
-            "module": "daka",
-            "console": "integratedTerminal",
-            "args": [
-                "111",
-                "222",
-                "333",
-                "444",
-                "555"
-            ]
-        }
-    ]
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "python",
+      "request": "launch",
+      "name": "Launch Daka App",
+      "module": "daka",
+      "console": "integratedTerminal",
+      "args": [
+        "111",
+        "222",
+        "333",
+        "444",
+        "555"
+      ]
+    },
+    {
+      "name": "Python: Debug Current File",
+      "type": "python",
+      "request": "launch",
+      "program": "${file}",
+      "console": "integratedTerminal",
+      "justMyCode": false
+    },
+    {
+      "name": "Python: Debug main()",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/daka/__init__.py",
+      "console": "integratedTerminal",
+      "args": [
+        "your_username",
+        "your_password",
+        "your_email@example.com",
+        "your_email_password",
+        "recipient_email@example.com"
+      ],
+      "justMyCode": false
+    }
+  ]
 }
