@@ -188,6 +188,7 @@ class Porn91:
             payload = {
                 "source": "91porn",
                 "check":1,
+                "type": type,
                 "videos": video_list
             }
             # 先检查哪些没有保存
