@@ -23,6 +23,7 @@ import shutil
 import os
 import boto3
 from botocore.exceptions import NoCredentialsError
+import hashlib
 
 _LOG = logging.getLogger(__name__)
 
@@ -75,6 +76,13 @@ class Porn91:
         ip = div.find('a').get_text(strip=True)
         return ip
     
+    def md5_encrypt(string):
+        # 创建 MD5 对象
+        md5 = hashlib.md5()
+        # 更新要加密的字符串，需先编码为字节
+        md5.update(string.encode('utf-8'))
+        # 返回加密后的十六进制字符串
+        return md5.hexdigest()
 
     # 获取打卡记录
     async def fetch_video_list(self,type="rf", page=1):
@@ -142,7 +150,7 @@ class Porn91:
         if video_tag:
             source_tag = video_tag.find('source')
             if source_tag and 'src' in source_tag.attrs:
-                video_path = await self.download_mp4(source_tag['src'],video['id'])
+                video_path = await self.download_mp4(source_tag['src'],video)
                 
                 video['video_mp4'] = video_path
                 _LOG.info("找到视频地址：%s", video['video_mp4'])
@@ -165,10 +173,12 @@ class Porn91:
         await self.http.download_file_playwright(image_url, image_path)
 
     # 下载文件进程
-    async def download_mp4(self, url, id):
+    async def download_mp4(self, url, video):
         _LOG.info("下载文件：%s", url)
+        # md5 作为文件名
+        file_name = self.md5_encrypt(url)
         # 文件保存路径的相对地址
-        file_path = "/upload/"+id+".mp4"
+        file_path = "/upload/" + file_name + ".mp4"
         real_path = await self.http.download_file_playwright(url, file_path)
         # 上传文件
         self.oss.upload_file(real_path, file_path)
