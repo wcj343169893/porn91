@@ -150,9 +150,10 @@ class Porn91:
         if video_tag:
             source_tag = video_tag.find('source')
             if source_tag and 'src' in source_tag.attrs:
-                video_path = await self.download_mp4(source_tag['src'],video)
-                
-                video['video_mp4'] = video_path
+                # 下载图片
+                video['thumbnail'] = await self.download_image(video['thumbnail'])
+                # 下载mp4视频
+                video['video_mp4'] = await self.download_mp4(source_tag['src'],video)
                 _LOG.info("找到视频地址：%s", video['video_mp4'])
             else:
                 _LOG.warning("未找到视频源标签")
@@ -166,11 +167,15 @@ class Porn91:
         _LOG.info("下载视频：%s", video_url)
 
     # 下载图片
-    async def download_image(self,image_url,id,flag="thumbnail"):
+    async def download_image(self, image_url):
         _LOG.info("下载图片：%s", image_url)
+        # md5 作为文件名
+        file_name = self.md5_encrypt(image_url)
         # 图片保存路径的相对地址
-        image_path = "/upload/video/"+id+"/"+flag+".jpg"
-        await self.http.download_file_playwright(image_url, image_path)
+        image_path = "/upload/" + file_name + "."+ image_url.split(".")[-1]
+        real_path = await self.http.download_file_playwright(image_url, image_path)
+        # 上传文件
+        return self.oss.upload_file_and_clean(real_path, image_path)
 
     # 下载文件进程
     async def download_mp4(self, url, video):
@@ -181,16 +186,7 @@ class Porn91:
         file_path = "/upload/" + file_name + ".mp4"
         real_path = await self.http.download_file_playwright(url, file_path)
         # 上传文件
-        self.oss.upload_file(real_path, file_path)
-        # 删除本地文件
-        try:
-            if os.path.exists(real_path):
-                os.remove(real_path)
-                _LOG.info("删除本地文件 %s 成功", real_path)
-        except FileNotFoundError:
-            _LOG.error("删除本地文件 %s 失败，文件未找到", real_path)
-            pass
-        return file_path
+        return self.oss.upload_file_and_clean(real_path, file_path)
 
 
     async def auto_sign(self):
@@ -447,7 +443,22 @@ class Oss:
             endpoint_url="https://"+user_id+".r2.cloudflarestorage.com"  # 替换为您的 R2 API 地址
         )
         self.bucket_name = bucket_name
-
+        
+        
+    def upload_file_and_clean(self, real_path, file_path):
+         # 上传文件
+        self.upload_file(real_path, file_path)
+        # 删除本地文件
+        try:
+            if os.path.exists(real_path):
+                os.remove(real_path)
+                _LOG.info("删除本地文件 %s 成功", real_path)
+        except FileNotFoundError:
+            _LOG.error("删除本地文件 %s 失败，文件未找到", real_path)
+            pass
+        return file_path
+    
+    
     def upload_file(self, file_path, object_name=None):
         try:
             # object_name去掉最前面斜杠
