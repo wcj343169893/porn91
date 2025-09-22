@@ -76,7 +76,7 @@ class Porn91:
         ip = div.find('a').get_text(strip=True)
         return ip
     
-    def md5_encrypt(string):
+    def md5_encrypt(self,string):
         # 创建 MD5 对象
         md5 = hashlib.md5()
         # 更新要加密的字符串，需先编码为字节
