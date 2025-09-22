@@ -8,3 +8,7 @@ soupsieve==2.6
 urllib3==2.2.3
 selenium==4.11.2
 playwright==1.55.0
+boto3==1.40.35
+botocore==1.40.35
+jmespath==1.0.1
+s3transfer==0.14.0

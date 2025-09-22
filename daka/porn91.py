@@ -21,6 +21,8 @@ import asyncio
 from playwright.async_api import async_playwright
 import shutil
 import os
+import boto3
+from botocore.exceptions import NoCredentialsError
 
 _LOG = logging.getLogger(__name__)
 
@@ -35,7 +37,6 @@ class Porn91:
     cookieFileName = "cookie.txt"
     lastPageIds = []
     categories = {
-        "rf": "精华",
         "ori": "原创",
         "hot": "当前最热",
         "top": "本月最热",
@@ -44,19 +45,20 @@ class Porn91:
         "tf": "本月收藏",
         "hd": "高清",
         "mf": "收藏最多",
+        "rf": "精华",
     }
     global_cookies = RequestsCookieJar()
     timer = None
 
-    def __init__(self, username, password, max_page = 50):
+    def __init__(self, username, password, max_page, access_key_id, secret_access_key, oss_bucket_name, oss_user_id):
         self.username = username
         self.password = password
         self.max_page = max_page
         self.timer = Utc8Timer()
         # self.load_cookie()
         self.http = Http(self.baseUrl)
-        # 判断是否有cookie
-        cookies = self.http.session.cookies
+        self.oss = Oss(access_key_id, secret_access_key, oss_bucket_name, oss_user_id)
+        
 
     # 访问https://2025.ip138.com/，获得自己真是ip
     async def fetch_ip(self):
@@ -139,7 +141,9 @@ class Porn91:
         if video_tag:
             source_tag = video_tag.find('source')
             if source_tag and 'src' in source_tag.attrs:
-                video['video_mp4'] = source_tag['src']
+                video_path = await self.download_mp4(source_tag['src'],video['id'])
+                
+                video['video_mp4'] = video_path
                 _LOG.info("找到视频地址：%s", video['video_mp4'])
             else:
                 _LOG.warning("未找到视频源标签")
@@ -160,8 +164,22 @@ class Porn91:
         await self.http.download_file_playwright(image_url, image_path)
 
     # 下载文件进程
-    async def download_file(self, url, file_path):
+    async def download_mp4(self, url, id):
         _LOG.info("下载文件：%s", url)
+        # 文件保存路径的相对地址
+        file_path = "/upload/"+id+".mp4"
+        real_path = await self.http.download_file_playwright(url, file_path)
+        # 上传文件
+        self.oss.upload_file(real_path, file_path)
+        # 删除本地文件
+        try:
+            if os.path.exists(real_path):
+                os.remove(real_path)
+                _LOG.info("删除本地文件 %s 成功", real_path)
+        except FileNotFoundError:
+            _LOG.error("删除本地文件 %s 失败，文件未找到", real_path)
+            pass
+        return file_path
 
 
     async def auto_sign(self):
@@ -192,22 +210,22 @@ class Porn91:
                 "videos": video_list
             }
             # 先检查哪些没有保存
-            # response = requests.post(self.uploadUrl, json=payload, headers=headers)
-            # if response.status_code == 200:
-            #     result = response.json()
-            #     # 需要上传的id ：result['data']=[111,222,333]
-            #     _LOG.info("检查视频列表成功")
-            #     _LOG.info(result)
-            #     if 'data' in result and isinstance(result['data'], list):
-            #         ids_to_upload = result['data']
-            #         _LOG.info("需要上传的视频ID列表：%s", ids_to_upload)
-            #         # 过滤出需要上传的视频
-            #         video_list = [video for video in video_list if video['id'] in ids_to_upload]
-            #         _LOG.info("需要上传的视频数量：%d", len(video_list))
-            #     else:
-            #         _LOG.warning("返回数据格式不正确，无法检查已保存视频")
-            # for video in video_list:
-            #     await self.fetch_video_page(video)
+            response = requests.post(self.uploadUrl, json=payload, headers=headers)
+            if response.status_code == 200:
+                result = response.json()
+                # 需要上传的id ：result['data']=[111,222,333]
+                _LOG.info("检查视频列表成功")
+                _LOG.info(result)
+                if 'data' in result and isinstance(result['data'], list):
+                    ids_to_upload = result['data']
+                    _LOG.info("需要上传的视频ID列表：%s", ids_to_upload)
+                    # 过滤出需要上传的视频
+                    video_list = [video for video in video_list if video['id'] in ids_to_upload]
+                    _LOG.info("需要上传的视频数量：%d", len(video_list))
+                else:
+                    _LOG.warning("返回数据格式不正确，无法检查已保存视频")
+            for video in video_list:
+                await self.fetch_video_page(video)
 
             # 发送列表到uploadUrl
             payload['check'] = 0
@@ -284,7 +302,7 @@ class Http:
         if self.playwright:
             await self.playwright.stop()   
 
-    async def download_file_playwright(self, url, file_path, timeout=30):
+    async def download_file_playwright(self, url, file_path, encrypt=False):
         # 判断目录是否存在，并且构造绝对地址
         # 当前目录+/upload/video/12345/thumbnail.jpg
         file_path = os.path.join(os.path.dirname(__file__), file_path.lstrip("/"))
@@ -294,15 +312,25 @@ class Http:
         # 直接browser下载
         response = requests.get(url, stream=True)
         response.raise_for_status()  # 检查请求是否成功
-        with open(file_path, "wb") as file:
-            for chunk in response.iter_content(chunk_size=8192):
-                file.write(chunk)
-        # page = await self.init_playwright()
-        # await page.goto(url, timeout=timeout * 1000)
-        # content = await page.content()
-        # with open(file_path, "wb") as f:
-        #     f.write(content.encode('utf-8'))
-        _LOG.debug("文件已保存到 %s", file_path)
+        # 文件base64转码后，再把前10个字符与结尾10个字符交换
+        if encrypt:
+            # 读取文件内容并进行 Base64 编码
+            encoded_data = base64.b64encode(response.content)
+            # 交换前 10 个字符与结尾 10 个字符
+            if len(encoded_data) > 20:  # 确保长度足够
+                encoded_data = (
+                    encoded_data[-10:] + encoded_data[10:-10] + encoded_data[:10]
+                )
+
+            # 将修改后的 Base64 数据重新保存为文件
+            with open(file_path, "wb") as f:
+                f.write(encoded_data)
+        else:
+            with open(file_path, "wb") as file:
+                for chunk in response.iter_content(chunk_size=8192):
+                    file.write(chunk)
+            _LOG.debug("文件已保存到 %s", file_path)
+        return file_path
 
     async def make_request(
             self,
@@ -397,6 +425,38 @@ class Http:
                 except Exception as err:
                     _LOG.error(err)
 
+class Oss:
+    def __init__(self, access_key_id, secret_access_key, bucket_name, user_id):
+        # Cloudflare R2 的配置
+        self.s3 = boto3.client(
+            's3',
+            aws_access_key_id= access_key_id, # 任意值
+            aws_secret_access_key= secret_access_key, # 使用 API Token
+            region_name="auto",  # Cloudflare R2 使用 "auto"
+            endpoint_url="https://"+user_id+".r2.cloudflarestorage.com"  # 替换为您的 R2 API 地址
+        )
+        self.bucket_name = bucket_name
+
+    def upload_file(self, file_path, object_name=None):
+        try:
+            # object_name去掉最前面斜杠
+            if object_name is None:
+                object_name = os.path.basename(file_path)
+            elif object_name.startswith("/"):
+                object_name = object_name[1:]
+            # 上传文件到指定路径
+            self.s3.upload_file(file_path, self.bucket_name, object_name)
+            _LOG.info("上传文件 %s 到桶 %s 成功", file_path, self.bucket_name)
+            return True
+        except FileNotFoundError:
+            _LOG.error("文件 %s 未找到", file_path)
+            return False
+        except NoCredentialsError:
+            _LOG.error("凭证错误")
+            return False
+        except Exception as e:
+            _LOG.error("上传文件失败: %s", e)
+            return False
 
 class CaptchaError(Exception):
     ...
