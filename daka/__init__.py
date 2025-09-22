@@ -22,6 +22,7 @@ async def main():
 
     # 最多采集页码
     parser.add_argument("max_page", type=str, nargs="?", help="最大页码")
+    parser.add_argument("upload_url", type=str, nargs="?", help="上传地址")
     # oss
     parser.add_argument("access_key_id", type=str, nargs="?", help="oss access_key_id")
     parser.add_argument("secret_access_key", type=str, nargs="?", help="oss secret_access_key")
@@ -49,7 +50,8 @@ async def main():
     try:
         _LOG.debug("Initializing Daka with username: %s", args.username)
         app = Daka(args.username, args.password, args.email, args.email_password,
-                   args.to_email, int(max_page),args.access_key_id, args.secret_access_key, args.oss_bucket_name, args.oss_user_id)
+                   args.to_email, int(max_page), args.upload_url, args.access_key_id, 
+                   args.secret_access_key, args.oss_bucket_name, args.oss_user_id)
         _LOG.debug("Daka initialized successfully.")
         await app.auto_sign()
     except KeyboardInterrupt:

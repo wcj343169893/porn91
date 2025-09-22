@@ -33,7 +33,7 @@ class Porn91:
     max_page = 50
     baseUrl = "https://www.91porn.com"
     cdnUrl = "https://vthumb.killcovid2021.com"
-    uploadUrl = "https://fc-mp-e1a4ddb5-a7a7-4152-8292-d63e2cc3f4e4.next.bspapp.com/http/uploads"
+    uploadUrl = "https://www.example.com/http/uploads"
     cookieFileName = "cookie.txt"
     lastPageIds = []
     categories = {
@@ -50,11 +50,12 @@ class Porn91:
     global_cookies = RequestsCookieJar()
     timer = None
 
-    def __init__(self, username, password, max_page, access_key_id, secret_access_key, oss_bucket_name, oss_user_id):
+    def __init__(self, username, password, max_page, upload_url, access_key_id, secret_access_key, oss_bucket_name, oss_user_id):
         self.username = username
         self.password = password
         self.max_page = max_page
         self.timer = Utc8Timer()
+        self.uploadUrl = upload_url
         # self.load_cookie()
         self.http = Http(self.baseUrl)
         self.oss = Oss(access_key_id, secret_access_key, oss_bucket_name, oss_user_id)

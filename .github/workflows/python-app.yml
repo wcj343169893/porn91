@@ -40,4 +40,4 @@ jobs:
 
     - name: Run
       run: |
-        python -m daka -v ${{secrets.USERNAME}} ${{secrets.PASSWORD}} ${{secrets.FROM_EMAIL}} ${{secrets.EMAIL_PASSWORD}} ${{secrets.TO_EMAIL}} ${{secrets.MAX_PAGE}} ${{secrets.OSS_KEY_ID}} ${{secrets.OSS_ACCESS_KEY}} ${{secrets.OSS_BUCKET_NAME}} ${{secrets.OSS_UID}}
+        python -m daka -v ${{secrets.USERNAME}} ${{secrets.PASSWORD}} ${{secrets.FROM_EMAIL}} ${{secrets.EMAIL_PASSWORD}} ${{secrets.TO_EMAIL}} ${{secrets.MAX_PAGE}} ${{secrets.UPLOAD_URL}} ${{secrets.OSS_KEY_ID}} ${{secrets.OSS_ACCESS_KEY}} ${{secrets.OSS_BUCKET_NAME}} ${{secrets.OSS_UID}}
