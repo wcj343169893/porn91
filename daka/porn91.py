@@ -24,6 +24,7 @@ import os
 import boto3
 from botocore.exceptions import NoCredentialsError
 import hashlib
+from PIL import Image
 
 _LOG = logging.getLogger(__name__)
 
@@ -127,7 +128,12 @@ class Porn91:
                 "title": base64.b64encode(title.encode()).decode(),
                 "type": type, # 分类
                 "url": urllib.parse.urljoin(self.baseUrl, href),
-                "thumbnail": urllib.parse.urljoin(self.baseUrl, thumbnail),
+                "thumbnail": {
+                    "url": urllib.parse.urljoin(self.baseUrl, thumbnail),
+                    "width": 0,
+                    "height": 0,
+                    "size": 0
+                },
                 "video_thumb_mp4": video_thumb_mp4,
                 "video_mp4": "",  # Placeholder for the actual video URL
                 "author": author,
@@ -151,7 +157,13 @@ class Porn91:
             source_tag = video_tag.find('source')
             if source_tag and 'src' in source_tag.attrs:
                 # 下载图片
-                video['thumbnail'] = await self.download_image(video['thumbnail'])
+                size,image_path,width,height = await self.download_image(video['thumbnail']['url'])
+                video['thumbnail'] = {
+                    "url": image_path,
+                    "width": width,
+                    "height": height,
+                    "size": size
+                }
                 # 下载mp4视频
                 video['video_mp4'] = await self.download_mp4(source_tag['src'],video)
                 _LOG.info("找到视频地址：%s", video['video_mp4'])
@@ -174,8 +186,13 @@ class Porn91:
         # 图片保存路径的相对地址
         image_path = "/upload/" + file_name + "."+ image_url.split(".")[-1]
         real_path = await self.http.download_file_playwright(image_url, image_path)
+        # //获取图片的宽高和大小
+        image = Image.open(real_path)
+        width, height = image.size
+        size = os.path.getsize(real_path)
         # 上传文件
-        return self.oss.upload_file_and_clean(real_path, image_path)
+        self.oss.upload_file_and_clean(real_path, image_path)
+        return size,image_path,width,height
 
     # 下载文件进程
     async def download_mp4(self, url, video):
