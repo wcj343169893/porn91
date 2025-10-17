@@ -30,8 +30,6 @@ _LOG = logging.getLogger(__name__)
 
 
 class Porn91:
-    username = ''
-    password = ''
     max_page = 50
     baseUrl = "https://www.91porn.com"
     cdnUrl = "https://vthumb.killcovid2021.com"
@@ -52,9 +50,7 @@ class Porn91:
     global_cookies = RequestsCookieJar()
     timer = None
 
-    def __init__(self, username, password, max_page, upload_url, access_key_id, secret_access_key, oss_bucket_name, oss_user_id):
-        self.username = username
-        self.password = password
+    def __init__(self, max_page, upload_url, access_key_id, secret_access_key, oss_bucket_name, oss_user_id):
         self.max_page = max_page
         self.timer = Utc8Timer()
         self.uploadUrl = upload_url
@@ -149,8 +145,15 @@ class Porn91:
         response = await self.http.make_request(
             method="GET", endpoint=endpoint
         )
+        # 打印response
+        # _LOG.info(response)
         # 解析 HTML 内容
         soup = BeautifulSoup(response, 'html.parser')
+        # 如果内容中存在Attention Required!，表示被拦截了
+        html_title = soup.find("title")
+        if html_title and "Attention Required!" in html_title.get_text(strip=True):
+            _LOG.warning("被拦截，无法获取视频页面")
+            return
         # 获取视频播放地址
         video_tag = soup.find('video', id='player_one_html5_api')
         if video_tag:
@@ -280,10 +283,34 @@ class Http:
     def __init__(self, base_url=None):
         self.base_url = base_url
         self.session = requests.Session()
+        # GET //mp43/1139541.mp4?st=XGjFo-gLGXhAZxtuxXswXw&e=1760711727&f=fa6fpPnc6LyrtCfvih+xuRAFS+ADYPGhh+XULC7/u5rClzWke2xrDqeO2cYZ4360w4WZRVqo6hgyPb9rInrG9HI5u210tqpp+ofeBhM8 HTTP/1.1
+        # Accept: */*
+        # Accept-Encoding: identity;q=1, *;q=0
+        # Accept-Language: zh-CN,zh;q=0.9
+        # Connection: keep-alive
+        # Host: la.btc620.com
+        # Range: bytes=0-
+        # Referer: https://www.91porn.com/
+        # Sec-Fetch-Dest: video
+        # Sec-Fetch-Mode: no-cors
+        # Sec-Fetch-Site: cross-site
+        # Sec-Fetch-Storage-Access: none
+        # User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36
+        # sec-ch-ua: "Chromium";v="140", "Not=A?Brand";v="24", "Google Chrome";v="140"
+        # sec-ch-ua-mobile: ?0
+        # sec-ch-ua-platform: "Windows"
         self.session.headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) \
                 AppleWebKit/537.36 (KHTML, like Gecko) \
                     Chrome/95.0.4638.54 Safari/537.36",
+             "referer":  "https://www.91porn.com/",
+             "sec-ch-ua-platform":"\"Windows\"",
+             "sec-ch-ua-mobile":"?0",
+             "sec-ch-ua":"\"Chromium\";v=\"140\", \"Not=A?Brand\";v=\"24\", \"Google Chrome\";v=\"140\"",
+             "Sec-Fetch-Storage-Access":"none",
+             "Sec-Fetch-Site":"cross-site",
+             "Sec-Fetch-Mode":"no-cors",
+             "Sec-Fetch-Dest":"video"        
         }
         self.load_cookie()
         self.cookie_saved = False

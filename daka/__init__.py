@@ -13,13 +13,6 @@ _LOG = logging.getLogger(__name__)
 
 async def main():
     parser = argparse.ArgumentParser(description="打卡系统自动打卡")
-    parser.add_argument("username", type=str, nargs="?", help="用户名")
-    parser.add_argument("password", type=str, nargs="?", help="密码")
-    # email
-    parser.add_argument("email", type=str, nargs="?", help="163邮箱账号")
-    parser.add_argument("email_password", type=str, nargs="?", help="163邮箱专用密码")
-    parser.add_argument("to_email", type=str, nargs="?", help="接收打卡结果的邮箱")
-
     # 最多采集页码
     parser.add_argument("max_page", type=str, nargs="?", help="最大页码")
     parser.add_argument("upload_url", type=str, nargs="?", help="上传地址")
@@ -42,15 +35,10 @@ async def main():
 
     if args.quiet:
         logging.getLogger().setLevel(logging.CRITICAL)
-    # username, password 必填
-    if not args.username or not args.password:
-        parser.print_help()
-        sys.exit(1)
     max_page = args.max_page if args.max_page else 5
     try:
-        _LOG.debug("Initializing Daka with username: %s", args.username)
-        app = Daka(args.username, args.password, args.email, args.email_password,
-                   args.to_email, int(max_page), args.upload_url, args.access_key_id, 
+        _LOG.debug("Initializing Daka ")
+        app = Daka(int(max_page), args.upload_url, args.access_key_id, 
                    args.secret_access_key, args.oss_bucket_name, args.oss_user_id)
         _LOG.debug("Daka initialized successfully.")
         await app.auto_sign()
