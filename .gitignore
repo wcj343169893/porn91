@@ -4,3 +4,6 @@
 /daka/__pycache__/
 /daka/__pycache__
 /daka/upload
+config.json
+dist
+build

@@ -9,13 +9,6 @@ _LOG = logging.getLogger(__name__)
 
 
 class Daka:
-    username = ''
-    password = ''
-    app_id = ''
-    app_secret = ''
-    email = ''
-    email_password = ''
-    to_email = ''
     max_page = 5
     timer = None
 

@@ -1,0 +1,10 @@
+# 使用 PyInstaller Windows 编译环境
+FROM cdrx/pyinstaller-windows:python3
+
+WORKDIR /src
+
+# 拷贝项目文件
+COPY . .
+
+# 打包命令
+RUN pyinstaller --onefile --name daka_app -p . daka/__main__.py
