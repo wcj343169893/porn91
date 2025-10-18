@@ -32,6 +32,11 @@ python -m playwright install
 ``` shell
 pip install --upgrade -r requirements.txt
 ```
+window下执行
+```
+pip install playwright
+python -m playwright install
+```
 
 ## 使用说明
 
